@@ -8,5 +8,23 @@
   </head>
   <body>
     <h1>Connected</h1>
+
+    <!-- add library socket.io -->
+    <script src="socket.io/socket.io.js"></script>
+
+    <!-- Connect sockets -->
+    <script>
+      var socket = io();
+      socket.on("connect", () => {
+        console.log("We are connected!");
+      });
+      socket.on("disconnected", () => {
+        console.log("Server is down!");
+      });
+      socket.emit("message", { Name: "Esteban" });
+      socket.on("message", function (message) {
+        console.log("New message: ", message);
+      });
+    </script>
   </body>
 </html>
