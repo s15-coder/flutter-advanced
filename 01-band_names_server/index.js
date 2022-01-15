@@ -16,7 +16,7 @@ const publicPath = path.resolve(__dirname, "public");
 app.use(express.static(publicPath));
 
 server.listen(process.env.PORT, (e) => {
-  if (e) throw new Error(e);
+    if (e) { throw new Error(e); }
 
-  console.log("Conectado al puerto ", process.env.PORT);
+    console.log("Conectado al puerto ", process.env.PORT);
 });

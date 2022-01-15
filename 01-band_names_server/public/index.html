@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+
+<head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Socket Server</title>
-  </head>
-  <body>
+</head>
+
+<body>
     <h1>Connected</h1>
 
     <!-- add library socket.io -->
@@ -14,17 +16,25 @@
 
     <!-- Connect sockets -->
     <script>
-      var socket = io();
-      socket.on("connect", () => {
-        console.log("We are connected!");
-      });
-      socket.on("disconnected", () => {
-        console.log("Server is down!");
-      });
-      socket.emit("message", { Name: "Esteban" });
-      socket.on("message", function (message) {
-        console.log("New message: ", message);
-      });
+        var socket = io();
+        socket.on("connect", () => {
+            console.log("We are connected!");
+
+            socket.on("new-message", function(message) {
+                console.log(message)
+            });
+        });
+        socket.on('active-bands', (payload) => {
+            console.clear();
+            console.table(payload)
+        })
+        socket.on("disconnected", () => {
+            console.log("Server is down!");
+        });
+        socket.emit("message", {
+            Name: "Esteban"
+        });
     </script>
-  </body>
+</body>
+
 </html>

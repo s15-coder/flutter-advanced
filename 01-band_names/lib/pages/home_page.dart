@@ -1,8 +1,10 @@
 import 'dart:io';
 
 import 'package:band_names/models/band.dart';
+import 'package:band_names/services/socket_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -14,14 +16,25 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   List<Band> bands = [
-    Band(id: "1", name: "DP", votes: 5),
-    Band(id: "2", name: "Maroon 5", votes: 9),
-    Band(id: "3", name: "Metalica", votes: 7),
-    Band(id: "4", name: "Post Malo  ne", votes: 13),
-    Band(id: "5", name: "The weeknd", votes: 3),
+    // Band(id: "1", name: "DP", votes: 5),
+    // Band(id: "2", name: "Maroon 5", votes: 9),
+    // Band(id: "3", name: "Metalica", votes: 7),
+    // Band(id: "4", name: "Post Malo  ne", votes: 13),
+    // Band(id: "5", name: "The weeknd", votes: 3),
   ];
   @override
+  void initState() {
+    super.initState();
+    final socketService = Provider.of<SocketService>(context, listen: false);
+    socketService.socket.on("active-bands", (payload) {
+      bands = (payload as List).map((band) => Band.fromJson(band)).toList();
+      setState(() {});
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final socketService = Provider.of<SocketService>(context);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -30,7 +43,20 @@ class _HomePageState extends State<HomePage> {
           style: TextStyle(color: Colors.black),
         ),
         centerTitle: true,
-        actions: [],
+        actions: [
+          Container(
+            margin: const EdgeInsets.only(right: 10),
+            child: socketService.serverStatus == ServerStatus.online
+                ? const Icon(
+                    Icons.wifi,
+                    color: Colors.blueAccent,
+                  )
+                : const Icon(
+                    Icons.offline_bolt,
+                    color: Colors.red,
+                  ),
+          )
+        ],
         elevation: 1,
       ),
       body: ListView.builder(
@@ -47,7 +73,7 @@ class _HomePageState extends State<HomePage> {
 
   addNewBand() {
     final textController = TextEditingController();
-    if (!Platform.isAndroid) {
+    if (Platform.isAndroid) {
       return showDialog(
           context: context,
           builder: (_) {
@@ -101,6 +127,13 @@ class _HomePageState extends State<HomePage> {
       setState(() {});
     }
     Navigator.pop(context);
+  }
+
+  @override
+  void dispose() {
+    final socketService = Provider.of<SocketService>(context);
+    socketService.socket.off("active-bands");
+    super.dispose();
   }
 }
 
