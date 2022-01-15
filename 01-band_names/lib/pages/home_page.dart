@@ -4,6 +4,7 @@ import 'package:band_names/models/band.dart';
 import 'package:band_names/services/socket_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:pie_chart/pie_chart.dart';
 import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
@@ -59,11 +60,17 @@ class _HomePageState extends State<HomePage> {
         ],
         elevation: 1,
       ),
-      body: ListView.builder(
-          itemCount: bands.length,
-          itemBuilder: (_, i) {
-            return BandItem(band: bands[i]);
-          }),
+      body: Column(
+        children: [
+          graphicStatistics(),
+          Expanded(
+              child: ListView.builder(
+                  itemCount: bands.length,
+                  itemBuilder: (_, i) {
+                    return BandItem(band: bands[i]);
+                  })),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: addNewBand,
         child: const Icon(Icons.add),
@@ -119,12 +126,8 @@ class _HomePageState extends State<HomePage> {
 
   void validateNewBand(String name) {
     if (name.length > 1) {
-      bands.add(Band(
-        id: DateTime.now().microsecond.toString(),
-        name: name,
-        votes: 0,
-      ));
-      setState(() {});
+      final socketService = Provider.of<SocketService>(context, listen: false);
+      socketService.socket.emit('add-band', {'name': name});
     }
     Navigator.pop(context);
   }
@@ -134,6 +137,14 @@ class _HomePageState extends State<HomePage> {
     final socketService = Provider.of<SocketService>(context);
     socketService.socket.off("active-bands");
     super.dispose();
+  }
+
+  Widget graphicStatistics() {
+    Map<String, double> dataMap = {};
+    for (Band band in bands) {
+      dataMap.putIfAbsent(band.name, () => band.votes.toDouble());
+    }
+    return PieChart(dataMap: dataMap);
   }
 }
 
@@ -147,10 +158,14 @@ class BandItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final socketService = Provider.of<SocketService>(context, listen: false);
+
     return Dismissible(
       key: Key(band.id),
       direction: DismissDirection.startToEnd,
-      onDismissed: (direction) {},
+      onDismissed: (direction) {
+        socketService.socket.emit('delete-band', {"id": band.id});
+      },
       background: Container(
         color: Colors.red,
         padding: const EdgeInsets.only(left: 10),
@@ -163,6 +178,9 @@ class BandItem extends StatelessWidget {
         ),
       ),
       child: ListTile(
+        onTap: () {
+          socketService.socket.emit("vote-band", {'id': band.id});
+        },
         leading: CircleAvatar(
           child: Text(band.name.substring(0, 2)),
         ),
