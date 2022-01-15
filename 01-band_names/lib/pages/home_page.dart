@@ -60,16 +60,22 @@ class _HomePageState extends State<HomePage> {
         ],
         elevation: 1,
       ),
-      body: Column(
-        children: [
-          graphicStatistics(),
-          Expanded(
-              child: ListView.builder(
-                  itemCount: bands.length,
-                  itemBuilder: (_, i) {
-                    return BandItem(band: bands[i]);
-                  })),
-        ],
+      body: Container(
+        child: Column(
+          children: [
+            Container(
+              height: 250,
+              child: graphicStatistics(),
+              // width: double.infinity,
+            ),
+            Expanded(
+                child: ListView.builder(
+                    itemCount: bands.length,
+                    itemBuilder: (_, i) {
+                      return BandItem(band: bands[i]);
+                    })),
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: addNewBand,
