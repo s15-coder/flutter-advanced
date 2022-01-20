@@ -1,12 +1,26 @@
+import 'package:chat/helpers/show_alert.dart';
+import 'package:chat/pages/users_page.dart';
+import 'package:chat/services/auth_service.dart';
 import 'package:chat/widgets/blue_button.dart';
 import 'package:chat/widgets/custom_field.dart';
 import 'package:chat/widgets/labels.dart';
 import 'package:chat/widgets/logo.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
   static const routeName = "LoginPage";
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final emailController = TextEditingController();
+
+  final passwordController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -21,7 +35,10 @@ class LoginPage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   const Logo(title: "Messenger"),
-                  _Form(),
+                  _Form(
+                    emailController: emailController,
+                    passwordController: passwordController,
+                  ),
                   const Labels(page: FromPage.login),
                   Text(
                     "Terminos y condiciones de uso",
@@ -39,10 +56,15 @@ class LoginPage extends StatelessWidget {
 }
 
 class _Form extends StatelessWidget {
-  final emailController = TextEditingController();
-  final passwordController = TextEditingController();
+  _Form({
+    required this.passwordController,
+    required this.emailController,
+  });
+  TextEditingController emailController;
+  TextEditingController passwordController;
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
     return Container(
       margin: EdgeInsets.symmetric(
           horizontal: MediaQuery.of(context).size.width * 0.12),
@@ -62,11 +84,24 @@ class _Form extends StatelessWidget {
           ),
           BlueButton(
             text: "Ingresar",
-            onPressed: () {
-              print("Credenciales");
-              print(emailController.text);
-              print(passwordController.text);
-            },
+            onPressed: authService.loggingIn
+                ? null
+                : () async {
+                    FocusScope.of(context).unfocus();
+                    final loginOK = await authService.login(
+                      emailController.text.trim(),
+                      passwordController.text.trim(),
+                    );
+                    if (loginOK) {
+                      Navigator.pushNamed(context, UsersPage.routeName);
+                    } else {
+                      showCustomAlert(
+                        context,
+                        "Incorrecto",
+                        "Tus credenciales son incorrectas",
+                      );
+                    }
+                  },
           )
           // SizedBox(height: 10),
           // ElevatedButton(onPressed: () {}, child: Text("Entrar")),
