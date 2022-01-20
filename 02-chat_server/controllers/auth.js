@@ -14,7 +14,7 @@ const register = async(req, res = response) => {
             return res.status(500).
             json({
                 ok: false,
-                mes: "Email already exists"
+                msg: "Email already exists"
             })
         }
 
@@ -59,18 +59,18 @@ const login = async(req, res = response) => {
 
                 return res.json({
                     ok: true,
-                    userFound,
+                    "user": userFound,
                     token
                 })
             } else {
-                return res.json({
+                return res.status(401), json({
                     ok: false,
                     msg: "Invalid credentials"
                 })
             }
         }
 
-        return res.json({
+        return res.status(401).json({
             ok: false,
             msg: "Invalid credentials"
         })
@@ -85,9 +85,10 @@ const login = async(req, res = response) => {
 
 const renew = async(req, res) => {
     const { uuid } = req.body
-    const user = await User.findOne({ uuid })
-
-    //Generate new token
+    console.log("UUID: " + uuid)
+    const user = await User.findOne({ _id: uuid })
+    console.log("UserFound: " + user)
+        //Generate new token
     const token = await generateJwt(user.uuid)
     return res.json({
         ok: true,
