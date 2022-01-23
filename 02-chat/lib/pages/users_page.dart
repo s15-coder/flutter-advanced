@@ -1,6 +1,10 @@
 import 'package:chat/models/user.dart';
+import 'package:chat/pages/chat_page.dart';
 import 'package:chat/pages/login_page.dart';
 import 'package:chat/services/auth_service.dart';
+import 'package:chat/services/chat_service.dart';
+import 'package:chat/services/socket_service.dart';
+import 'package:chat/services/users_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
@@ -14,32 +18,19 @@ class UsersPage extends StatefulWidget {
 }
 
 class _UsersPageState extends State<UsersPage> {
-  final connected = true;
   RefreshController _refreshController = RefreshController();
-  var users = [
-    User(
-      online: true,
-      name: "Sergio",
-      email: "Serestebanoo@gmail.com",
-      uuid: "1",
-    ),
-    User(
-      online: false,
-      name: "Juan",
-      email: "juan@gmail.com",
-      uuid: "2",
-    ),
-    User(
-      online: true,
-      name: "Ramiro",
-      email: "ramiro@gmail.com",
-      uuid: "3",
-    ),
-  ];
+  List<User> users = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUsers();
+  }
 
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
+    final socketService = Provider.of<SocketService>(context);
     return Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.white,
@@ -55,6 +46,7 @@ class _UsersPageState extends State<UsersPage> {
               color: Colors.black,
             ),
             onPressed: () {
+              socketService.disconnect();
               Navigator.pushReplacementNamed(context, LoginPage.routeName);
               AuthService.deleteToken();
             },
@@ -62,10 +54,16 @@ class _UsersPageState extends State<UsersPage> {
           actions: [
             Container(
               margin: EdgeInsets.only(right: 5),
-              padding: EdgeInsets.all(1),
-              child: Icon(connected ? Icons.check : Icons.offline_bolt),
+              padding: EdgeInsets.all(3),
+              child: Icon(
+                socketService.serverStatus == ServerStatus.online
+                    ? Icons.check
+                    : Icons.offline_bolt,
+              ),
               decoration: BoxDecoration(
-                color: connected ? Colors.green : Colors.red,
+                color: socketService.serverStatus == ServerStatus.online
+                    ? Colors.green
+                    : Colors.red,
                 shape: BoxShape.circle,
               ),
             )
@@ -87,9 +85,8 @@ class _UsersPageState extends State<UsersPage> {
   }
 
   void _loadUsers() async {
-    // monitor network fetch
-    await Future.delayed(const Duration(milliseconds: 1000));
-    // if failed,use refreshFailed()
+    users = await UsersService().getUsers();
+    setState(() {});
     _refreshController.refreshCompleted();
   }
 }
@@ -113,20 +110,24 @@ class _UserTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      title: Text(user.name),
-      subtitle: Text(user.email),
-      leading: CircleAvatar(
-        child: Text(
-          user.name.substring(0, 2).toUpperCase(),
+        title: Text(user.name),
+        subtitle: Text(user.email),
+        leading: CircleAvatar(
+          child: Text(
+            user.name.substring(0, 2).toUpperCase(),
+          ),
         ),
-      ),
-      trailing: Container(
-        height: 6,
-        width: 6,
-        decoration: BoxDecoration(
-            color: user.online ? Colors.green : Colors.red,
-            shape: BoxShape.circle),
-      ),
-    );
+        trailing: Container(
+          height: 7.5,
+          width: 7.5,
+          decoration: BoxDecoration(
+              color: user.online ? Colors.green : Colors.red,
+              shape: BoxShape.circle),
+        ),
+        onTap: () {
+          final chatService = Provider.of<ChatService>(context, listen: false);
+          chatService.userTo = user;
+          Navigator.pushNamed(context, ChatPage.routeName);
+        });
   }
 }

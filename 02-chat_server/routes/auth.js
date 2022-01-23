@@ -5,7 +5,7 @@ const { Router } = require('express');
 const { check } = require('express-validator');
 const { register, login, renew } = require('../controllers/auth');
 const { validateFields } = require('../middlewares/validate_fields');
-const { validateJwt } = require('../middlewares/validate_jwt');
+const { validateRequestJwt } = require('../middlewares/validate_jwt');
 
 const router = Router()
 
@@ -26,7 +26,7 @@ router.post('/', [
     login
 );
 router.post('/renew', [
-        validateJwt,
+        validateRequestJwt,
         validateFields,
     ],
     renew

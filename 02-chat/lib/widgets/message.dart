@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 
 class MessageBox extends StatelessWidget {
   final String message;
-  final String uuid;
+  final bool isFromMe;
   final AnimationController animationController;
   const MessageBox({
     Key? key,
     required this.message,
-    required this.uuid,
+    required this.isFromMe,
     required this.animationController,
   }) : super(key: key);
   @override
@@ -17,7 +17,7 @@ class MessageBox extends StatelessWidget {
       child: SizeTransition(
         sizeFactor:
             CurvedAnimation(parent: animationController, curve: Curves.easeIn),
-        child: uuid == "123"
+        child: isFromMe
             ? _MyMessage(
                 message: message,
                 animationController: animationController,

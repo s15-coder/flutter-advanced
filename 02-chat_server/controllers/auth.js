@@ -85,15 +85,16 @@ const login = async(req, res = response) => {
 
 const renew = async(req, res) => {
     const { uuid } = req.body
-    console.log("UUID: " + uuid)
     const user = await User.findOne({ _id: uuid })
-    console.log("UserFound: " + user)
+    if (user) {
         //Generate new token
-    const token = await generateJwt(user.uuid)
-    return res.json({
-        ok: true,
-        user,
-        token
-    })
+        const token = await generateJwt(user.id)
+        return res.json({
+            ok: true,
+            user,
+            token
+        })
+    }
+    return res.status(400).json({ ok: false, msg: 'User does not exist' })
 }
 module.exports = { register, login, renew }

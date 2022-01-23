@@ -1,7 +1,7 @@
 const { response } = require('express');
 const jwt = require('jsonwebtoken')
 
-const validateJwt = (req, res = response, next) => {
+const validateRequestJwt = (req, res = response, next) => {
     try {
 
         const token = req.header('authorization')
@@ -26,6 +26,16 @@ const validateJwt = (req, res = response, next) => {
     }
 }
 
+const validateJwt = (token = '') => {
+    try {
+        const payload =
+            jwt.verify(token, process.env.JWT_SECRET)
+        return { authOk: true, uuid: payload['uuid'] }
+    } catch (error) {
+        return { authOk: false, uuid: null }
+    }
+}
 module.exports = {
+    validateRequestJwt,
     validateJwt
 }
