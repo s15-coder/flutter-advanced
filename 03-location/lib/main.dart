@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:location/blocs/gps/gps_bloc.dart';
+import 'package:location/blocs/location/location_bloc.dart';
+import 'package:location/blocs/map/map_bloc.dart';
 import 'package:location/screens/access_location_page.dart';
 import 'package:location/screens/loading_page.dart';
 import 'package:location/screens/map_page.dart';
@@ -15,6 +17,8 @@ class MyMaps extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => GpsBloc()),
+        BlocProvider(create: (_) => LocationBloc()),
+        BlocProvider(create: (_) => MapBloc()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
