@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/blocs/location/location_bloc.dart';
+import 'package:location/blocs/map/map_bloc.dart';
 import 'package:location/views/maps_view.dart';
 import 'package:location/widgets/btn_current_location.dart';
+import 'package:location/widgets/btn_follow_user.dart';
+import 'package:location/widgets/btn_show_user_route.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({Key? key}) : super(key: key);
@@ -26,25 +29,40 @@ class _MapPageState extends State<MapPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: BlocBuilder<LocationBloc, LocationState>(
-        builder: (context, state) {
-          if (state.lastKnownLocation == null) {
+        builder: (context, stateLocation) {
+          if (stateLocation.lastKnownLocation == null) {
             return const Center(
               child: Text('Please wait...'),
             );
           }
 
-          return SingleChildScrollView(
-            child: Stack(
-              children: [
-                MapView(initialLocation: state.lastKnownLocation!),
-              ],
-            ),
+          return BlocBuilder<MapBloc, MapState>(
+            builder: (context, stateMap) {
+              final polylines = Map<String, Polyline>.from(stateMap.polylines);
+              if (!stateMap.showMyRoute) {
+                polylines.removeWhere((key, value) => key == 'myWay');
+              }
+              return SingleChildScrollView(
+                child: Stack(
+                  children: [
+                    MapView(
+                      initialLocation: stateLocation.lastKnownLocation!,
+                      polylines: polylines.values.toSet(),
+                    ),
+                  ],
+                ),
+              );
+            },
           );
         },
       ),
       floatingActionButton: Column(
         mainAxisAlignment: MainAxisAlignment.end,
-        children: const [BtnCurrentLocation()],
+        children: const [
+          BtnShowUserRoute(),
+          BtnCurrentLocation(),
+          BtnFollowUser()
+        ],
       ),
     );
   }

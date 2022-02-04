@@ -18,7 +18,11 @@ class MyMaps extends StatelessWidget {
       providers: [
         BlocProvider(create: (_) => GpsBloc()),
         BlocProvider(create: (_) => LocationBloc()),
-        BlocProvider(create: (_) => MapBloc()),
+        BlocProvider(
+          create: (_) => MapBloc(
+            locationBloc: BlocProvider.of<LocationBloc>(_),
+          ),
+        ),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

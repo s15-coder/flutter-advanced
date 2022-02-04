@@ -8,6 +8,17 @@ abstract class MapEvent extends Equatable {
 }
 
 class OnMapInitialized extends MapEvent {
-  GoogleMapController googleMapController;
-  OnMapInitialized(this.googleMapController);
+  final GoogleMapController googleMapController;
+  const OnMapInitialized(this.googleMapController);
 }
+
+class OnStartFollowingUserEvent extends MapEvent {}
+
+class OnStopFollowingUserEvent extends MapEvent {}
+
+class UpdatePolylinesEvent extends MapEvent {
+  final List<LatLng> locationsHistory;
+  const UpdatePolylinesEvent(this.locationsHistory);
+}
+
+class OnToggleShowUserRouteEvent extends MapEvent {}

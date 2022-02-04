@@ -10,15 +10,30 @@ class BtnCurrentLocation extends StatelessWidget {
   Widget build(BuildContext context) {
     final locationBloc = BlocProvider.of<LocationBloc>(context);
     final mapBloc = BlocProvider.of<MapBloc>(context);
-    return FloatingActionButton(
-      onPressed: () {
-        final currentLocation = locationBloc.state.lastKnownLocation;
-        final snackBar = CustomSnackbar(label: 'There is not location');
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        if (currentLocation == null) return;
-        mapBloc.moveTo(currentLocation);
-      },
-      child: const Icon(Icons.center_focus_strong),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      child: GestureDetector(
+        onTap: () {
+          final currentLocation = locationBloc.state.lastKnownLocation;
+          if (currentLocation == null) {
+            final snackBar = CustomSnackbar(label: 'There is not location');
+            ScaffoldMessenger.of(context).showSnackBar(snackBar);
+            return;
+          }
+          mapBloc.moveTo(currentLocation);
+        },
+        child: Container(
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.purple,
+          ),
+          padding: const EdgeInsets.all(10),
+          child: const Icon(
+            Icons.center_focus_strong,
+            color: Colors.white,
+          ),
+        ),
+      ),
     );
   }
 }

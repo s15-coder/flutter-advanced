@@ -7,8 +7,10 @@ class MapView extends StatelessWidget {
   const MapView({
     Key? key,
     required this.initialLocation,
+    required this.polylines,
   }) : super(key: key);
   final LatLng initialLocation;
+  final Set<Polyline> polylines;
   @override
   Widget build(BuildContext context) {
     final mapBloc = BlocProvider.of<MapBloc>(context);
@@ -20,13 +22,19 @@ class MapView extends StatelessWidget {
     return SizedBox(
         height: size.height,
         width: size.width,
-        child: GoogleMap(
-          initialCameraPosition: initialCameraPosition,
-          myLocationEnabled: true,
-          myLocationButtonEnabled: false,
-          compassEnabled: false,
-          onMapCreated: (controller) => mapBloc.add(
-            OnMapInitialized(controller),
+        child: Listener(
+          onPointerHover: (_) =>
+              BlocProvider.of<MapBloc>(context).add(OnStopFollowingUserEvent()),
+          child: GoogleMap(
+            polylines: polylines,
+            zoomControlsEnabled: false,
+            initialCameraPosition: initialCameraPosition,
+            myLocationEnabled: true,
+            myLocationButtonEnabled: false,
+            compassEnabled: false,
+            onMapCreated: (controller) => mapBloc.add(
+              OnMapInitialized(controller),
+            ),
           ),
         ));
   }
