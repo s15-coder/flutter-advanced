@@ -1,19 +1,22 @@
 import 'dart:async';
-
-import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/blocs/location/location_bloc.dart';
+import 'package:location/models/route_destination.dart';
 
 part 'map_event.dart';
 part 'map_state.dart';
 
 class MapBloc extends Bloc<MapEvent, MapState> {
-  final LocationBloc locationBloc;
+  late LocationBloc locationBloc;
   GoogleMapController? _googleMapController;
   StreamSubscription<LocationState>? locationStream;
-  MapBloc({required this.locationBloc}) : super(const MapState()) {
+  LatLng? mapCenter;
+
+  MapBloc({required BuildContext context}) : super(const MapState()) {
+    locationBloc = BlocProvider.of<LocationBloc>(context);
     on<OnMapInitialized>(_initMap);
 
     on<OnStartFollowingUserEvent>(_onStartFollowingUser);
@@ -25,6 +28,9 @@ class MapBloc extends Bloc<MapEvent, MapState> {
         (event, emit) => emit(state.copyWith(showMyRoute: !state.showMyRoute)));
 
     on<UpdatePolylinesEvent>(_onUpdatePolylines);
+
+    on<OnAddNewPolyline>(
+        (event, emit) => emit(state.copyWith(polylines: event.polylines)));
 
     locationStream = locationBloc.stream.listen((locationState) {
       if (locationState.lastKnownLocation == null) return;
@@ -63,9 +69,22 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     moveTo(locationBloc.state.lastKnownLocation!);
   }
 
+  void drawNewPolyline(RouteDestination routeDestination) {
+    final polyline = Polyline(
+        polylineId: const PolylineId('destination'),
+        points: routeDestination.coords,
+        color: Colors.black,
+        endCap: Cap.roundCap,
+        startCap: Cap.roundCap,
+        width: 3);
+    final currentPolylines = Map<String, Polyline>.from(state.polylines);
+    currentPolylines['destination'] = polyline;
+    add(OnAddNewPolyline(currentPolylines));
+  }
+
   void moveTo(LatLng coords) {
     final cameraUpdate = CameraUpdate.newLatLng(coords);
-    _googleMapController!.animateCamera(cameraUpdate);
+    _googleMapController?.animateCamera(cameraUpdate);
   }
 
   @override

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:location/blocs/gps/gps_bloc.dart';
 import 'package:location/blocs/location/location_bloc.dart';
 import 'package:location/blocs/map/map_bloc.dart';
+import 'package:location/blocs/search/search_bloc.dart';
 import 'package:location/screens/access_location_page.dart';
 import 'package:location/screens/loading_page.dart';
 import 'package:location/screens/map_page.dart';
@@ -18,11 +19,8 @@ class MyMaps extends StatelessWidget {
       providers: [
         BlocProvider(create: (_) => GpsBloc()),
         BlocProvider(create: (_) => LocationBloc()),
-        BlocProvider(
-          create: (_) => MapBloc(
-            locationBloc: BlocProvider.of<LocationBloc>(_),
-          ),
-        ),
+        BlocProvider(create: (_) => MapBloc(context: _)),
+        BlocProvider(create: (_) => SearchBloc()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

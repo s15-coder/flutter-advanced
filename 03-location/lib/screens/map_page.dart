@@ -7,6 +7,8 @@ import 'package:location/views/maps_view.dart';
 import 'package:location/widgets/btn_current_location.dart';
 import 'package:location/widgets/btn_follow_user.dart';
 import 'package:location/widgets/btn_show_user_route.dart';
+import 'package:location/widgets/manual_marker.dart';
+import 'package:location/widgets/search_bar.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({Key? key}) : super(key: key);
@@ -49,6 +51,8 @@ class _MapPageState extends State<MapPage> {
                       initialLocation: stateLocation.lastKnownLocation!,
                       polylines: polylines.values.toSet(),
                     ),
+                    const SearchBar(),
+                    const ManualMarker()
                   ],
                 ),
               );
