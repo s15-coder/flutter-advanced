@@ -1,13 +1,13 @@
 import 'dart:convert';
 
-TrafficResponse trafficResponseFromJson(String str) =>
-    TrafficResponse.fromJson(json.decode(str));
+DirectionsResponse trafficResponseFromJson(String str) =>
+    DirectionsResponse.fromJson(json.decode(str));
 
-String trafficResponseToJson(TrafficResponse data) =>
+String trafficResponseToJson(DirectionsResponse data) =>
     json.encode(data.toJson());
 
-class TrafficResponse {
-  TrafficResponse({
+class DirectionsResponse {
+  DirectionsResponse({
     required this.routes,
     required this.waypoints,
     required this.code,
@@ -19,8 +19,8 @@ class TrafficResponse {
   String code;
   String uuid;
 
-  factory TrafficResponse.fromJson(Map<String, dynamic> json) =>
-      TrafficResponse(
+  factory DirectionsResponse.fromJson(Map<String, dynamic> json) =>
+      DirectionsResponse(
         routes: List<Route>.from(json["routes"].map((x) => Route.fromJson(x))),
         waypoints: List<Waypoint>.from(
             json["waypoints"].map((x) => Waypoint.fromJson(x))),

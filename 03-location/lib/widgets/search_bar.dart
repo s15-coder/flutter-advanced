@@ -1,6 +1,8 @@
 import 'package:animate_do/animate_do.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:location/blocs/location/location_bloc.dart';
+import 'package:location/blocs/map/map_bloc.dart';
 import 'package:location/blocs/search/search_bloc.dart';
 import 'package:location/delegates/search_destination_delegate.dart';
 import 'package:location/models/search_result.dart';
@@ -22,11 +24,22 @@ class SearchBar extends StatelessWidget {
 
 class _SearchBarBody extends StatelessWidget {
   const _SearchBarBody({Key? key}) : super(key: key);
-  void onSeachResult(BuildContext context, SearchResult searchResult) {
+  void onSeachResult(BuildContext context, SearchResult searchResult) async {
+    final searchBloc = BlocProvider.of<SearchBloc>(context);
+    final locationBloc = BlocProvider.of<LocationBloc>(context);
+    final mapBloc = BlocProvider.of<MapBloc>(context);
+    if (searchResult.cancelled) return;
     if (searchResult.manualLocation) {
       final searchBloc = BlocProvider.of<SearchBloc>(context, listen: false);
       searchBloc.add(OnShowManualMarkerEvent());
     }
+    if (searchResult.coords == null) return;
+    if (locationBloc.state.lastKnownLocation == null) return;
+    final start = locationBloc.state.lastKnownLocation!;
+    final end = searchResult.coords!;
+    final destination = await searchBloc.getCoordsStartToEnd(start, end);
+    mapBloc.drawNewPolyline(destination);
+    mapBloc.moveTo(start);
   }
 
   @override

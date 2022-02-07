@@ -2,8 +2,9 @@ import 'package:google_polyline_algorithm/google_polyline_algorithm.dart';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:location/models/places_response.dart';
 import 'package:location/models/route_destination.dart';
-import 'package:location/services/traffic_service.dart';
+import 'package:location/services/mapbox_api/api_mapbox_service.dart';
 
 part 'search_event.dart';
 part 'search_state.dart';
@@ -17,6 +18,16 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
     });
     on<OnHideManualMarkerEvent>((_, emit) {
       emit(state.copyWith(showManualMarker: false));
+    });
+    on<OnNewPlacesSuggestions>((event, emit) {
+      emit(state.copyWith(places: event.places));
+    });
+    on<OnAddSearchEvent>((event, emit) {
+      var historyTemp = [...state.history];
+      historyTemp.removeWhere((place) => place.id == event.placeSearched.id);
+      final newState =
+          state.copyWith(history: [event.placeSearched, ...historyTemp]);
+      emit(newState);
     });
   }
 
@@ -39,5 +50,10 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
       distance: distance,
       coords: coords,
     );
+  }
+
+  Future getPlacesSuggestions(LatLng proximity, String query) async {
+    final places = await _trafficService.getPlacesSuggestions(proximity, query);
+    add(OnNewPlacesSuggestions(places));
   }
 }
