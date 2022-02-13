@@ -50,6 +50,7 @@ class _MapPageState extends State<MapPage> {
                     MapView(
                       initialLocation: stateLocation.lastKnownLocation!,
                       polylines: polylines.values.toSet(),
+                      markers: stateMap.markers.values.toSet(),
                     ),
                     const SearchBar(),
                     const ManualMarker()

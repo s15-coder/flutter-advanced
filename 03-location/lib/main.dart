@@ -4,6 +4,7 @@ import 'package:location/blocs/gps/gps_bloc.dart';
 import 'package:location/blocs/location/location_bloc.dart';
 import 'package:location/blocs/map/map_bloc.dart';
 import 'package:location/blocs/search/search_bloc.dart';
+import 'package:location/helpers/markers/marker_widget_test.dart';
 import 'package:location/screens/access_location_page.dart';
 import 'package:location/screens/loading_page.dart';
 import 'package:location/screens/map_page.dart';
@@ -31,6 +32,7 @@ class MyMaps extends StatelessWidget {
           LoadingPage.routeName: (_) => const LoadingPage(),
         },
         initialRoute: LoadingPage.routeName,
+        // home: MarkerWidget(),
       ),
     );
   }

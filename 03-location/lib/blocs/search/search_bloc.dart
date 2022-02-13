@@ -31,7 +31,18 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
     });
   }
 
-  Future<RouteDestination> getCoordsStartToEnd(LatLng start, LatLng end) async {
+  Future<RouteDestination> getCoordsStartToEnd(LatLng start, LatLng end,
+      {PlaceInfo? endPLaceInfoP}) async {
+    PlaceInfo? placeInfo = endPLaceInfoP;
+    //Get information about the place if manual marker is selected
+    if (placeInfo == null) {
+      final endInfo = await _trafficService.getPlaceInfoByCoords(end);
+      placeInfo = PlaceInfo(
+        placeName: endInfo.placeName,
+        description: endInfo.text,
+      );
+    }
+
     final trafficResponse =
         await _trafficService.getCoordsStartToEnd(start, end);
     final distance = trafficResponse.routes[0].distance;
@@ -49,6 +60,7 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
       duration: duration,
       distance: distance,
       coords: coords,
+      endPointInfo: placeInfo,
     );
   }
 

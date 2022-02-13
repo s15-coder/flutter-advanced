@@ -5,6 +5,8 @@ import 'package:location/blocs/location/location_bloc.dart';
 import 'package:location/blocs/map/map_bloc.dart';
 import 'package:location/blocs/search/search_bloc.dart';
 import 'package:location/delegates/search_destination_delegate.dart';
+import 'package:location/models/places_response.dart';
+import 'package:location/models/route_destination.dart';
 import 'package:location/models/search_result.dart';
 
 class SearchBar extends StatelessWidget {
@@ -37,7 +39,21 @@ class _SearchBarBody extends StatelessWidget {
     if (locationBloc.state.lastKnownLocation == null) return;
     final start = locationBloc.state.lastKnownLocation!;
     final end = searchResult.coords!;
-    final destination = await searchBloc.getCoordsStartToEnd(start, end);
+
+    PlaceInfo? placeInfo;
+    if (searchResult.name != null && searchResult.description != null) {
+      placeInfo = PlaceInfo(
+        placeName: searchResult.name!,
+        description: searchResult.description!,
+      );
+    }
+
+    var destination = await searchBloc.getCoordsStartToEnd(
+      start,
+      end,
+      endPLaceInfoP: placeInfo,
+    );
+
     mapBloc.drawNewPolyline(destination);
     mapBloc.moveTo(start);
   }

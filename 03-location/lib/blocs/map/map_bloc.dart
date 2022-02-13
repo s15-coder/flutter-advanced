@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/blocs/location/location_bloc.dart';
+import 'package:location/helpers/marker_from_image.dart';
+import 'package:location/helpers/painter_marker.dart';
 import 'package:location/models/route_destination.dart';
 
 part 'map_event.dart';
@@ -29,8 +31,10 @@ class MapBloc extends Bloc<MapEvent, MapState> {
 
     on<UpdatePolylinesEvent>(_onUpdatePolylines);
 
-    on<OnAddNewPolyline>(
-        (event, emit) => emit(state.copyWith(polylines: event.polylines)));
+    on<OnAddNewPolyline>((event, emit) => emit(state.copyWith(
+          polylines: event.polylines,
+          markers: event.marker,
+        )));
 
     locationStream = locationBloc.stream.listen((locationState) {
       if (locationState.lastKnownLocation == null) return;
@@ -69,7 +73,7 @@ class MapBloc extends Bloc<MapEvent, MapState> {
     moveTo(locationBloc.state.lastKnownLocation!);
   }
 
-  void drawNewPolyline(RouteDestination routeDestination) {
+  Future drawNewPolyline(RouteDestination routeDestination) async {
     final polyline = Polyline(
         polylineId: const PolylineId('destination'),
         points: routeDestination.coords,
@@ -79,7 +83,51 @@ class MapBloc extends Bloc<MapEvent, MapState> {
         width: 3);
     final currentPolylines = Map<String, Polyline>.from(state.polylines);
     currentPolylines['destination'] = polyline;
-    add(OnAddNewPolyline(currentPolylines));
+
+    final kms = (routeDestination.distance / 1000)
+        .toStringAsFixed(1)
+        .replaceAll('.0', '');
+    final duration = (routeDestination.duration / 60).floor();
+    final placeNameEnd = routeDestination.endPointInfo.placeName;
+
+    // final markerStartIcon = await getMarkerFromImage();
+    // final markerEndIcon = await getMarkerFromNetwordImage();
+    final markerStartIcon = await getStartMarkerPainter(
+      duration.toString(),
+      'My location',
+    );
+    final markerEndIcon =
+        await getEndMarkerPainter(kms.toString(), placeNameEnd);
+
+    final startMarker = Marker(
+      markerId: const MarkerId('start'),
+      position: routeDestination.coords.first,
+      icon: markerStartIcon,
+      anchor: const Offset(0, 1.0),
+
+      // infoWindow: InfoWindow(
+      //   title: 'Start point',
+      //   snippet: 'Kms: $kms, Duration: $duration',
+      // ),
+    );
+    final endMarker = Marker(
+      markerId: const MarkerId('end'),
+      position: routeDestination.coords.last,
+      icon: markerEndIcon,
+      anchor: const Offset(0, 1.0),
+
+      // infoWindow: InfoWindow(
+      //   title: routeDestination.endPointInfo.placeName,
+      //   snippet: routeDestination.endPointInfo.description,
+      // ),
+    );
+
+    final currentMarkers = Map<String, Marker>.from(state.markers);
+    currentMarkers['start'] = startMarker;
+    currentMarkers['end'] = endMarker;
+    add(OnAddNewPolyline(currentPolylines, currentMarkers));
+    await Future.delayed(const Duration(milliseconds: 300));
+    _googleMapController?.showMarkerInfoWindow(const MarkerId('start'));
   }
 
   void moveTo(LatLng coords) {

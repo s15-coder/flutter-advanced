@@ -24,6 +24,7 @@ void showLoadingMessage(BuildContext context) {
             ),
           );
         });
+    return;
   }
   showCupertinoDialog(
       barrierDismissible: false,

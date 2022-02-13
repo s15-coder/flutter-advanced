@@ -8,9 +8,11 @@ class MapView extends StatelessWidget {
     Key? key,
     required this.initialLocation,
     required this.polylines,
+    required this.markers,
   }) : super(key: key);
   final LatLng initialLocation;
   final Set<Polyline> polylines;
+  final Set<Marker> markers;
   @override
   Widget build(BuildContext context) {
     final mapBloc = BlocProvider.of<MapBloc>(context);
@@ -27,6 +29,7 @@ class MapView extends StatelessWidget {
               BlocProvider.of<MapBloc>(context).add(OnStopFollowingUserEvent()),
           child: GoogleMap(
             polylines: polylines,
+            markers: markers,
             zoomControlsEnabled: false,
             initialCameraPosition: initialCameraPosition,
             myLocationEnabled: true,
