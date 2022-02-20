@@ -1,7 +1,12 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:paymeny_app/bloc/payment/payment_bloc.dart';
+import 'package:paymeny_app/helpers/alerts.dart';
+import 'package:paymeny_app/services/stripe_service.dart';
+import 'package:stripe_payment/stripe_payment.dart';
 
 class PaymentSection extends StatelessWidget {
   const PaymentSection({Key? key}) : super(key: key);
@@ -24,18 +29,22 @@ class PaymentSection extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              Text(
-                'TOTAL',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text('252 USD')
-            ],
+          BlocBuilder<PaymentBloc, PaymentState>(
+            builder: (context, state) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    'TOTAL',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text("${state.amountToPay} ${state.currency}")
+                ],
+              );
+            },
           ),
           _ButtonPay()
         ],
@@ -48,14 +57,43 @@ class _ButtonPay extends StatelessWidget {
   const _ButtonPay({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    return true ? buildCreditCardBtn(context) : buildAppleAndGoogleBtn(context);
+    return BlocBuilder<PaymentBloc, PaymentState>(
+      builder: (context, state) {
+        return state.activeCreditCard
+            ? buildCreditCardBtn(context)
+            : buildAppleAndGoogleBtn(context);
+      },
+    );
   }
 
   Widget buildAppleAndGoogleBtn(BuildContext context) {
     final widthScreen = MediaQuery.of(context).size.width;
     return MaterialButton(
-      onPressed: () {},
+      onPressed: () async {
+        showLoadingAlert(context);
+        final stripeService = StripeService();
+        final state = BlocProvider.of<PaymentBloc>(context).state;
+        final paymentResponse = await stripeService.payWithGoogleOrApple(
+          amount: state.getAmountString,
+          currency: state.currency,
+        );
+        Navigator.pop(context);
+        if (paymentResponse.ok) {
+          showMessageAlert(
+            context: context,
+            title: 'Ok',
+            message: 'Successfull payment',
+          );
+        } else {
+          showMessageAlert(
+            context: context,
+            title: 'Sorry',
+            message: '${paymentResponse.msg}',
+          );
+        }
+      },
       minWidth: widthScreen * 0.35,
+      height: 45,
       shape: const StadiumBorder(),
       color: Colors.black,
       child: Row(
@@ -80,7 +118,36 @@ class _ButtonPay extends StatelessWidget {
   Widget buildCreditCardBtn(BuildContext context) {
     final widthScreen = MediaQuery.of(context).size.width;
     return MaterialButton(
-      onPressed: () {},
+      onPressed: () async {
+        showLoadingAlert(context);
+        final stripeService = StripeService();
+        final state = BlocProvider.of<PaymentBloc>(context).state;
+        final tarjetaCredito = state.creditCard!;
+        final number = tarjetaCredito.cardNumber;
+        final monthAnio = tarjetaCredito.expiracyDate.split('/');
+        final paymentResponse = await stripeService.payWithExistingCreditCard(
+          amount: state.getAmountString,
+          currency: state.currency,
+          creditCard: CreditCard(
+              number: number,
+              expMonth: int.parse(monthAnio[0]),
+              expYear: int.parse(monthAnio[1])),
+        );
+        Navigator.pop(context);
+        if (paymentResponse.ok) {
+          showMessageAlert(
+            context: context,
+            title: 'Ok',
+            message: 'Successfull payment',
+          );
+        } else {
+          showMessageAlert(
+            context: context,
+            title: 'Sorry',
+            message: '${paymentResponse.msg}',
+          );
+        }
+      },
       height: 45,
       minWidth: widthScreen * 0.35,
       shape: const StadiumBorder(),

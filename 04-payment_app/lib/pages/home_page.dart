@@ -1,23 +1,53 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_credit_card/credit_card_widget.dart';
+import 'package:paymeny_app/bloc/payment/payment_bloc.dart';
 import 'package:paymeny_app/data/tarjetas.dart';
 import 'package:paymeny_app/helpers/alerts.dart';
 import 'package:paymeny_app/helpers/fadein_navigation.dart';
 import 'package:paymeny_app/pages/credit_card_page.dart';
+import 'package:paymeny_app/services/stripe_service.dart';
 import 'package:paymeny_app/widgets/payment_section.dart';
 
 class HomePage extends StatelessWidget {
-  const HomePage({Key? key}) : super(key: key);
+  HomePage({Key? key}) : super(key: key);
   static const routeName = 'HomePage';
+  final stripeService = StripeService();
   @override
   Widget build(BuildContext context) {
+    final paymentBloc = BlocProvider.of<PaymentBloc>(context);
     final size = MediaQuery.of(context).size;
     return Scaffold(
         appBar: AppBar(
           centerTitle: true,
           title: const Text('Pay'),
           actions: [
-            IconButton(onPressed: () async {}, icon: const Icon(Icons.add)),
+            IconButton(
+                onPressed: () async {
+                  showLoadingAlert(context);
+                  final amount = paymentBloc.state.getAmountString;
+                  final currency = paymentBloc.state.currency;
+                  final paymentResponse =
+                      await stripeService.payWithNewCreditCard(
+                    amount: amount,
+                    currency: currency,
+                  );
+                  Navigator.pop(context);
+                  if (paymentResponse.ok) {
+                    showMessageAlert(
+                      context: context,
+                      title: 'Ok',
+                      message: 'Successfull payment',
+                    );
+                  } else {
+                    showMessageAlert(
+                      context: context,
+                      title: 'Sorry',
+                      message: '${paymentResponse.msg}',
+                    );
+                  }
+                },
+                icon: const Icon(Icons.add)),
           ],
         ),
         body: Stack(
@@ -35,13 +65,9 @@ class HomePage extends StatelessWidget {
                     final creditCard = tarjetas[i];
                     return GestureDetector(
                       onTap: () {
-                        Navigator.push(
-                            context,
-                            navigateFadeIn(
-                                context,
-                                CreditCardPage(
-                                  tarjetaCredito: creditCard,
-                                )));
+                        paymentBloc.add(OnStartUsingCreditCard(creditCard));
+                        Navigator.push(context,
+                            navigateFadeIn(context, const CreditCardPage()));
                       },
                       child: Hero(
                         tag: creditCard.cardNumber,
@@ -51,13 +77,7 @@ class HomePage extends StatelessWidget {
                             cardHolderName: creditCard.cardHolderName,
                             cvvCode: creditCard.cvv,
                             showBackView: false,
-                            onCreditCardWidgetChange: (_) {
-                              navigateFadeIn(
-                                  context,
-                                  CreditCardPage(
-                                    tarjetaCredito: creditCard,
-                                  ));
-                            }),
+                            onCreditCardWidgetChange: (_) {}),
                       ),
                     );
                   }),
